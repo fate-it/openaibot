@@ -12,29 +12,25 @@ client = AsyncOpenAI(api_key=AITOKEN,
 
 
 async def gpt_text(req, model):
-    return {'response': 'Ваш ответ из гпт',
-            'usage': str(random.randint(4, 8))}
-    # completion = await client.chat.completions.create(
-    #     messages=[{"role": "user", "content": req}],
-    #     model=model
-    # )
-    #
-    # return {'response': completion.choices[0].message.content,
-    #         'usage': completion.usage.total_tokens}
+    completion = await client.chat.completions.create(
+        messages=[{"role": "user", "content": req}],
+        model=model
+    )
+    
+    return {'response': completion.choices[0].message.content,
+            'usage': completion.usage.total_tokens}
 
 
 async def gpt_image(req, model):
-    return {'response': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSR00fTs6wiXUdEaYIsAv-h4YvxvGsHKFK_lg&s',
+    response = await client.images.generate(
+        model=model,
+        prompt=req,
+        size='1024x1024',
+        quality='standard',
+        n=1
+    )
+    return {'response': response.data[0].url,
             'usage': 1}
-    # response = await client.images.generate(
-    #     model=model,
-    #     prompt=req,
-    #     size='1024x1024',
-    #     quality='standard',
-    #     n=1
-    # )
-    # return {'response': response.data[0].url,
-    #         'usage': 1}
 
 
 async def encode_image(image_path):
@@ -76,12 +72,11 @@ async def gpt_vision(req, model, file):
                 "text": req
             },
         )
-    return {'response': 'На фото изображенно None', 'usage': random.randint(30, 300)}
 
-    # async with aiohttp.ClientSession() as session:
-    #     async with session.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload) as res:
-    #         completion = await res.json()
-    # return {'response': completion['choices'][0]['message']['content'],
-    #         'usage': completion['usage']['total_tokens']}
+    async with aiohttp.ClientSession() as session:
+        async with session.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload) as res:
+            completion = await res.json()
+    return {'response': completion['choices'][0]['message']['content'],
+            'usage': completion['usage']['total_tokens']}
 
 
